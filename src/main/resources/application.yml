@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/finance_db
+    username: postgres
+    password: your_password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+plaid:
+  client-id: your_plaid_client_id
+  secret: your_plaid_secret
+  environment: sandbox
+
+server:
+  port: 8080
