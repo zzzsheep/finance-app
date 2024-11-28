@@ -15,7 +15,10 @@ public class User {
 
     private String firstName;
     private String lastName;
-    private String password; // Will be encrypted
+
+
+    @Column(nullable = false)
+    private String password;
 
     @Column(updatable = false)
     private java.time.LocalDateTime createdAt;
