@@ -8,10 +8,4 @@ public enum Role {
     ADMIN
 }
 
-// Update User.java to include role
-@Entity
-public class User {
-    // ... existing fields
-    @Enumerated(EnumType.STRING)
-    private Role role;
-}
+

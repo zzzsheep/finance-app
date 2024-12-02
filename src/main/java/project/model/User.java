@@ -59,4 +59,9 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+        // ... existing fields
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
 }
