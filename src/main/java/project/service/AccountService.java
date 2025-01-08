@@ -11,7 +11,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Service
+@Service    //marks this class as a service component
 @RequiredArgsConstructor
 
 public class AccountService {

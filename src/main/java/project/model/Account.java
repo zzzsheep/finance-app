@@ -1,6 +1,8 @@
 package project.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -19,6 +21,7 @@ public class Account {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false) // Creates a relationhip between User and account tables.
+    @JsonManagedReference
     private User user;
 
     // basic account information
