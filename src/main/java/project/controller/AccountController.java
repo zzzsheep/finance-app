@@ -5,11 +5,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import project.dto.AccountDTO;
+import project.dto.AccountResponseDTO;
 import project.model.Account;
 import project.model.AccountType;
 import project.service.AccountService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController //This class is a REST API controller
 @RequestMapping("/api/accounts") // All endpoints in this controller start with /api/accounts
@@ -20,7 +22,7 @@ public class AccountController {
     private final AccountService accountService;
 
     @PostMapping    //Handles POST requests to /api/accounts
-    public ResponseEntity<Account> createAccount(
+    public ResponseEntity<AccountResponseDTO> createAccount(
             Authentication authentication,
             @RequestBody AccountDTO accountDTO) {
         // Authentication.getName() returns the user's email
@@ -28,27 +30,29 @@ public class AccountController {
                 authentication.getName(),
                 accountDTO
         );
-        return ResponseEntity.ok(account);
+        return ResponseEntity.ok(AccountResponseDTO.from(account));
     }
+
 
     @GetMapping
-    public ResponseEntity<List<Account>> getUserAccounts(Authentication authentication) {
+    public ResponseEntity<List<AccountResponseDTO>> getUserAccounts(Authentication authentication) {
         List<Account> accounts = accountService.getUserAccounts(authentication.getName());
-        return ResponseEntity.ok(accounts);
+        List<AccountResponseDTO> responseDTOS = accounts.stream()
+                .map(AccountResponseDTO::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responseDTOS);
     }
 
-    @GetMapping("/{accountId}") // Handles GET requests to /api/accounts/{accountId}
-    public ResponseEntity<Account> getAccount(
+    @GetMapping("/{accountId}")
+    public ResponseEntity<AccountResponseDTO> getAccount(
             Authentication authentication,
-            // {accountId} from URL is injected here
             @PathVariable Long accountId) {
-        // Get account, checking if it belongs to authenticated user
         Account account = accountService.getAccount(accountId, authentication.getName());
-        return ResponseEntity.ok(account);
+        return ResponseEntity.ok(AccountResponseDTO.from(account));
     }
 
     @PutMapping("/{accountId}")
-    public ResponseEntity<Account> updateAccount(
+    public ResponseEntity<AccountResponseDTO> updateAccount(
             Authentication authentication,
             @PathVariable Long accountId,
             @RequestBody AccountDTO accountDTO) {
@@ -57,7 +61,7 @@ public class AccountController {
                 authentication.getName(),
                 accountDTO
         );
-        return ResponseEntity.ok(account);
+        return ResponseEntity.ok(AccountResponseDTO.from(account));
     }
 
     @DeleteMapping("/{accountId}")
@@ -67,6 +71,7 @@ public class AccountController {
         accountService.deleteAccount(accountId, authentication.getName());
         return ResponseEntity.noContent().build();
     }
+
 }
 
 
