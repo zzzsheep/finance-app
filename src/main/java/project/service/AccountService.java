@@ -27,7 +27,7 @@ public class AccountService {
         //Create a new account
         Account account = new Account();
         account.setUser(user);
-        account.setAccountName(account.getAccountName());
+        account.setAccountName(accountDTO.getAccountName());
         account.setAccountNumber(accountDTO.getAccountNumber());
         account.setAccountType(accountDTO.getAccountType());
         account.setBalance(accountDTO.getBalance());
@@ -61,6 +61,7 @@ public class AccountService {
         Account account = getAccount(accountId, userEmail);
 
         // Update fields
+        account.setAccountNumber(accountDTO.getAccountNumber());
         account.setAccountName(accountDTO.getAccountName());
         account.setAccountType(accountDTO.getAccountType());
         account.setBalance(accountDTO.getBalance());
