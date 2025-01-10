@@ -5,12 +5,20 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import project.dto.FinancialSummary;
 import project.dto.TransactionDTO;
 import project.model.Transaction;
 import project.model.Account;
+import project.model.TransactionCategory;
 import project.repository.TransactionRepository;
 import project.repository.AccountRepository;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import project.model.TransactionType;
 @Service
 @RequiredArgsConstructor
@@ -62,6 +70,38 @@ public class TransactionService {
 
     // Add methods for financial analysis
     public FinancialSummary getFinancialSummary(String userEmail, LocalDateTime startDate, LocalDateTime endDate) {
-        // Implement summary logic
+        List<Transaction> transactions = transactionRepository.findByAccountUserEmailAndTransactionDateBetween(
+                userEmail, startDate, endDate);
+
+        FinancialSummary summary = new FinancialSummary();
+
+        // Calculate totals
+        BigDecimal totalIncome = transactions.stream()
+                .filter(t -> t.getType() == TransactionType.INCOME)
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalExpenses = transactions.stream()
+                .filter(t -> t.getType() == TransactionType.EXPENSE)
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Calculate category breakdown
+        Map<TransactionCategory, BigDecimal> categoryBreakdown = transactions.stream()
+                .collect(Collectors.groupingBy(
+                        Transaction::getCategory,
+                        Collectors.reducing(
+                                BigDecimal.ZERO,
+                                Transaction::getAmount,
+                                BigDecimal::add
+                        )
+                ));
+
+        summary.setTotalIncome(totalIncome);
+        summary.setTotalExpenses(totalExpenses);
+        summary.setTotalBalance(totalIncome.subtract(totalExpenses));
+        summary.setCategoryBreakdown(categoryBreakdown);
+
+        return summary;
     }
 }

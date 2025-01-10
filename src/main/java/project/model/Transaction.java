@@ -19,9 +19,13 @@ public class Transaction {
     private Account account;
 
     private BigDecimal amount;
+
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;  // This adds getType() and setType()
     private String description;
     private String merchant;
-    private String category;  //store catergory thats provided by bank
+    @Enumerated(EnumType.STRING)
+    private  TransactionCategory category;  //store catergory thats provided by bank
     private String subCategory; // For more detailed categories
 
     private LocalDateTime transactionDate;
