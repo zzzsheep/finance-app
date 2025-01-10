@@ -1,6 +1,8 @@
 // project/dto/TransactionDTO.java
 package project.dto;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Data;
 import project.model.TransactionType;
 import project.model.TransactionCategory;
