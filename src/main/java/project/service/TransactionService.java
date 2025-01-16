@@ -1,6 +1,6 @@
 // project/service/TransactionService.java
 package project.service;
-
+import project.exception.InvalidTransactionDataException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -107,7 +107,7 @@ public class TransactionService {
 
     private void validateSufficientFunds(Account account, BigDecimal amount) {
         if (account.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientFundsException("Insufficient funds in account");
+            throw new InvalidTransactionDataException("Insufficient funds in account");
         }
     }
 
@@ -122,7 +122,7 @@ public class TransactionService {
             case TRANSFER:
                 newBalance = account.getBalance().subtract(transaction.getAmount().abs());
                 if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-                    throw new InsufficientFundsException("Transaction would result in negative balance");
+                    throw new InvalidTransactionDataException("Transaction would result in negative balance");
                 }
                 break;
             default:
