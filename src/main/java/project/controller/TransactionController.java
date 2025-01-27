@@ -3,6 +3,7 @@ package project.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
+import project.dto.FinancialSummary;
 import project.dto.TransactionDTO;
 import project.model.Transaction;
 import project.service.TransactionService;
@@ -18,6 +19,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TransactionController {
     private final TransactionService transactionService;
+
+    @GetMapping("/summary")
+    public ResponseEntity<FinancialSummary> getFinancialSummary(Authentication authentication) {
+        String userEmail = ((UserDetails) authentication.getPrincipal()).getUsername();
+        FinancialSummary summary = transactionService.getFinancialSummary(userEmail);
+        return ResponseEntity.ok(summary);
+    }
 
     @PostMapping
     public ResponseEntity<Transaction> createTransaction(

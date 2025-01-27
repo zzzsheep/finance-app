@@ -1,4 +1,5 @@
 package project.model;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -68,5 +69,6 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonManagedReference
-    private List<Account> accounts = new ArrayList<>();
+    @JsonIgnoreProperties("user")
+    private List<Account> accounts;
 }
