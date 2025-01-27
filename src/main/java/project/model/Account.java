@@ -2,6 +2,7 @@ package project.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Entity // Database table
 @Data // Lombok annotation that auto create getters, setters, toString, etc.
 @Table(name = "accounts") // Names the table in the database
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Account {
     // Primary key that auto-increments
     @Id
@@ -22,6 +24,7 @@ public class Account {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false) // Creates a relationhip between User and account tables.
     @JsonManagedReference
+    @JsonIgnoreProperties({"accounts", "password"})
     private User user;
 
     // basic account information
