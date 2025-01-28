@@ -13,7 +13,7 @@ spring:
 
 plaid:
   client-id: your_plaid_client_id
-  secret: your_plaid_secret
+  secret: your_sandbox_secret_here
   environment: sandbox
 
 server:
