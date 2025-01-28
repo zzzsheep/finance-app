@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.plaid.client.model.CountryCode.US;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,35 +29,26 @@ public class PlaidService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Create user object
         LinkTokenCreateRequestUser requestUser = new LinkTokenCreateRequestUser()
                 .clientUserId(userEmail);
-
-        // Configure the products you want to use
         List<Products> products = Arrays.asList(
                 Products.TRANSACTIONS,
                 Products.AUTH
         );
 
-        // Create config
-        LinkTokenCreateRequest.ConfigurationObject config = new LinkTokenCreateRequest.ConfigurationObject();
-
-        // Create the link_token request
         LinkTokenCreateRequest request = new LinkTokenCreateRequest()
                 .user(requestUser)
                 .clientName("Your App Name")
                 .products(products)
-                .countryCodes(Arrays.asList("US"))
-                .language("en")
-                .webhook("https://yourapp.com/webhook")
-                .redirectUri("https://yourapp.com/oauth-redirect")
-                .configuration(config);
+                .countryCodes(Arrays.asList(US))
+                .language("en");
 
         Response<LinkTokenCreateResponse> response = plaidApi.linkTokenCreate(request).execute();
 
-        if (!response.isSuccessful()) {
-            PlaidError error = parseError(response);
-            throw new RuntimeException("Error creating link token: " + error.getErrorMessage());
+        if (!response.isSuccessful() || response.body() == null) {
+            log.error("Error creating link token: {}", response.errorBody() != null ?
+                    response.errorBody().string() : "Unknown error");
+            throw new RuntimeException("Error creating link token");
         }
 
         return response.body();
@@ -72,9 +65,10 @@ public class PlaidService {
         Response<ItemPublicTokenExchangeResponse> response =
                 plaidApi.itemPublicTokenExchange(request).execute();
 
-        if (!response.isSuccessful()) {
-            PlaidError error = parseError(response);
-            throw new RuntimeException("Error exchanging public token: " + error.getErrorMessage());
+        if (!response.isSuccessful() || response.body() == null) {
+            log.error("Error exchanging public token: {}", response.errorBody() != null ?
+                    response.errorBody().string() : "Unknown error");
+            throw new RuntimeException("Error exchanging public token");
         }
 
         String accessToken = response.body().getAccessToken();
@@ -103,10 +97,9 @@ public class PlaidService {
 
             Response<AccountsGetResponse> response = plaidApi.accountsGet(request).execute();
 
-            if (!response.isSuccessful()) {
-                PlaidError error = parseError(response);
-                log.error("Error getting accounts for item {}: {}",
-                        item.getItemId(), error.getErrorMessage());
+            if (!response.isSuccessful() || response.body() == null) {
+                log.error("Error getting accounts: {}", response.errorBody() != null ?
+                        response.errorBody().string() : "Unknown error");
                 continue;
             }
 
@@ -118,16 +111,5 @@ public class PlaidService {
 
     public List<PlaidItem> getUserPlaidItems(String userEmail) {
         return plaidItemRepository.findByUserEmail(userEmail);
-    }
-
-    private PlaidError parseError(Response<?> response) {
-        try {
-            if (response.errorBody() != null) {
-                return PlaidError.fromJson(response.errorBody().string());
-            }
-        } catch (IOException e) {
-            log.error("Error parsing Plaid error response", e);
-        }
-        return new PlaidError().errorMessage("Unknown error occurred");
     }
 }
