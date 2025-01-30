@@ -4,6 +4,7 @@ import com.plaid.client.model.*;
 import com.plaid.client.request.PlaidApi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.ResponseBody;
 import org.springframework.stereotype.Service;
 import project.model.PlaidItem;
 import project.model.User;
@@ -25,6 +26,20 @@ public class PlaidService {
     private final PlaidItemRepository plaidItemRepository;
     private final UserRepository userRepository;
 
+
+    private String getErrorMessage(Response<?> response) {
+        if (response.errorBody() == null) {
+            return "Unknown error";
+        }
+
+        try (ResponseBody errorBody = response.errorBody()) {
+            return errorBody.string();
+        } catch (IOException e) {
+            log.error("Error reading error body", e);
+            return "Error reading error response";
+        }
+    }
+
     public LinkTokenCreateResponse createLinkToken(String userEmail) throws IOException {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -40,15 +55,15 @@ public class PlaidService {
                 .user(requestUser)
                 .clientName("Your App Name")
                 .products(products)
-                .countryCodes(Arrays.asList(US))
+                .countryCodes(Arrays.asList(CountryCode.US))
                 .language("en");
 
         Response<LinkTokenCreateResponse> response = plaidApi.linkTokenCreate(request).execute();
 
         if (!response.isSuccessful() || response.body() == null) {
-            log.error("Error creating link token: {}", response.errorBody() != null ?
-                    response.errorBody().string() : "Unknown error");
-            throw new RuntimeException("Error creating link token");
+            String errorMessage = getErrorMessage(response);
+            log.error("Error creating link token: {}", errorMessage);
+            throw new RuntimeException("Error creating link token: " + errorMessage);
         }
 
         return response.body();
@@ -66,9 +81,9 @@ public class PlaidService {
                 plaidApi.itemPublicTokenExchange(request).execute();
 
         if (!response.isSuccessful() || response.body() == null) {
-            log.error("Error exchanging public token: {}", response.errorBody() != null ?
-                    response.errorBody().string() : "Unknown error");
-            throw new RuntimeException("Error exchanging public token");
+            String errorMessage = getErrorMessage(response);
+            log.error("Error exchanging public token: {}", errorMessage);
+            throw new RuntimeException("Error exchanging public token: " + errorMessage);
         }
 
         String accessToken = response.body().getAccessToken();
@@ -98,8 +113,8 @@ public class PlaidService {
             Response<AccountsGetResponse> response = plaidApi.accountsGet(request).execute();
 
             if (!response.isSuccessful() || response.body() == null) {
-                log.error("Error getting accounts: {}", response.errorBody() != null ?
-                        response.errorBody().string() : "Unknown error");
+                String errorMessage = getErrorMessage(response);
+                log.error("Error getting accounts for item {}: {}", item.getItemId(), errorMessage);
                 continue;
             }
 
