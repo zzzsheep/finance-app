@@ -25,8 +25,12 @@ public class PlaidItem {
     private String institutionId;
     private String institutionName;
 
-    @Column(nullable = false)
+    // Added for transaction syncing
+    private String transactionsCursor;
     private LocalDateTime lastSync;
+    private String error;
+    private String webhookUrl;
+
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
