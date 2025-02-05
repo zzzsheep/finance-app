@@ -16,15 +16,16 @@ public class Transaction {
 
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
-    @JsonIgnoreProperties({"transactions", "user"})
+
     private Account account;
 
     private BigDecimal amount;
+    private String description;
+    private String merchant;
 
     @Enumerated(EnumType.STRING)
     private TransactionType type;  // This adds getType() and setType()
-    private String description;
-    private String merchant;
+
     @Enumerated(EnumType.STRING)
     private  TransactionCategory category;  //store catergory thats provided by bank
     private String subCategory; // For more detailed categories

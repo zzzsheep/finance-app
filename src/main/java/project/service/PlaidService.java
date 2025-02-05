@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+import com.plaid.client.model.Products;
 import static com.plaid.client.model.CountryCode.US;
 
 @Service
@@ -44,8 +44,12 @@ public class PlaidService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        String clientUserId = "user-" + user.getId();
+
+
         LinkTokenCreateRequestUser requestUser = new LinkTokenCreateRequestUser()
-                .clientUserId(userEmail);
+                .clientUserId(clientUserId);
+
         List<Products> products = Arrays.asList(
                 Products.TRANSACTIONS,
                 Products.AUTH
@@ -53,7 +57,7 @@ public class PlaidService {
 
         LinkTokenCreateRequest request = new LinkTokenCreateRequest()
                 .user(requestUser)
-                .clientName("Your App Name")
+                .clientName("Finance App")
                 .products(products)
                 .countryCodes(Arrays.asList(CountryCode.US))
                 .language("en");
@@ -126,5 +130,21 @@ public class PlaidService {
 
     public List<PlaidItem> getUserPlaidItems(String userEmail) {
         return plaidItemRepository.findByUserEmail(userEmail);
+    }
+    public String createSandboxPublicToken() throws IOException {
+        SandboxPublicTokenCreateRequest request = new SandboxPublicTokenCreateRequest()
+                .institutionId("ins_109508")  // Chase Bank sandbox institution ID
+                .initialProducts(Arrays.asList(Products.TRANSACTIONS, Products.AUTH));
+
+        Response<SandboxPublicTokenCreateResponse> response =
+                plaidApi.sandboxPublicTokenCreate(request).execute();
+
+        if (!response.isSuccessful() || response.body() == null) {
+            String errorMessage = getErrorMessage(response);
+            log.error("Error creating sandbox public token: {}", errorMessage);
+            throw new RuntimeException("Error creating sandbox public token: " + errorMessage);
+        }
+
+        return response.body().getPublicToken();
     }
 }
