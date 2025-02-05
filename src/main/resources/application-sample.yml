@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:port/YOUR_NAME
+    username: YOUR_NAME
+    password: YOUR_PASSWORD
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+plaid:
+  clientId: YOUR_CLIENT_ID
+  secret: YOUR_SECRET
+  environment: Sandbox
+
+server:
+  port: 8080
+
+application:
+  jwt:
+    secret-key: YOUR_JWT_KEY
+    expiration: 86400000  # a day in milliseconds
+    token-prefix: "Bearer "
