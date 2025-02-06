@@ -14,7 +14,8 @@ import project.repository.TransactionRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.io.IOException;
+import java.time.LocalDate;
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -39,11 +40,12 @@ public class TransactionSyncService {
     @Transactional
     public void syncTransactionsForItem(PlaidItem item) {
         try {
-            TransactionsSyncRequest request = new TransactionsSyncRequest()
+            TransactionsGetRequest request = new TransactionsGetRequest()
                     .accessToken(item.getAccessToken())
-                    .cursor(item.getTransactionsCursor());
+                    .startDate(LocalDate.now().minusDays(30))
+                    .endDate(LocalDate.now());
 
-            TransactionsSyncResponse response = plaidApi.transactionsSync(request)
+            TransactionsGetResponse response = plaidApi.transactionsGet(request)
                     .execute()
                     .body();
 

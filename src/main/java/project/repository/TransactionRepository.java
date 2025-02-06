@@ -8,13 +8,14 @@ import project.model.Account;
 import project.model.Transaction;
 import project.model.TransactionCategory;
 import project.model.TransactionType;
-
+import java.util.Optional;
 import java.awt.print.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+    Optional<Transaction> findByPlaidTransactionId(String plaidTransactionId);
     // Find transactions by date range
     List<Transaction> findByAccountIdAndTransactionDateBetween(
             Long accountId, LocalDateTime start, LocalDateTime end);
