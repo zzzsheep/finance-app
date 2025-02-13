@@ -40,6 +40,9 @@ public class Account {
 
     private String bankName;
 
+    @Column(unique = true)
+    private String plaidAccountId;
+
     //Create TimeStamps that can't be changed after creation
     @Column(updatable = false)
     private LocalDateTime createdAt;

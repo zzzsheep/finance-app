@@ -27,14 +27,28 @@ public class Transaction {
     private TransactionType type;  // This adds getType() and setType()
 
     @Enumerated(EnumType.STRING)
-    private  TransactionCategory category;  //store catergory thats provided by bank
+    private TransactionCategory category;  //store catergory thats provided by bank
     private String subCategory; // For more detailed categories
 
     private LocalDateTime transactionDate;
-    private String transactionId;   //Original transaction ID from bank
+    private String transactionId;
+    //Original transaction ID from bank
+    @Column(unique = true)
+    private String plaidTransactionId;
     private Boolean pending;    // Transaction status
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

@@ -9,10 +9,9 @@ import project.model.Transaction;
 import project.model.TransactionCategory;
 import project.model.TransactionType;
 import java.util.Optional;
-import java.awt.print.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
-
+import org.springframework.data.domain.Pageable;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     Optional<Transaction> findByPlaidTransactionId(String plaidTransactionId);
