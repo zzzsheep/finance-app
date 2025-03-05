@@ -12,6 +12,7 @@ import project.repository.PlaidItemRepository;
 import project.repository.UserRepository;
 import retrofit2.Response;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -73,8 +74,9 @@ public class PlaidService {
         return response.body();
     }
 
-    public String exchangePublicToken(String publicToken, String userEmail,
-                                      String institutionId, String institutionName) throws IOException {
+    public PlaidItem exchangeAndSavePublicToken(String publicToken, String userEmail,
+                                                String institutionId, String institutionName)
+            throws IOException {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -100,10 +102,9 @@ public class PlaidService {
         plaidItem.setAccessToken(accessToken);
         plaidItem.setInstitutionId(institutionId);
         plaidItem.setInstitutionName(institutionName);
+        plaidItem.setLastSync(LocalDateTime.now());
 
-        plaidItemRepository.save(plaidItem);
-
-        return accessToken;
+        return plaidItemRepository.save(plaidItem);
     }
 
     public List<AccountBase> getAccounts(String userEmail) throws IOException {

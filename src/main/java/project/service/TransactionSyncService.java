@@ -1,4 +1,5 @@
 package project.service;
+
 import com.plaid.client.model.*;
 import com.plaid.client.request.PlaidApi;
 import lombok.RequiredArgsConstructor;
@@ -6,13 +7,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import project.model.Account;
 import project.model.PlaidItem;
 import project.model.Transaction;
 import project.model.TransactionType;
 import project.repository.AccountRepository;
 import project.repository.PlaidItemRepository;
 import project.repository.TransactionRepository;
-import project.model.Account;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
@@ -26,6 +28,7 @@ public class TransactionSyncService {
     private final PlaidItemRepository plaidItemRepository;
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+
     @Scheduled(fixedRate = 3600000) // Run every hour
     @Transactional
     public void syncAllTransactions() {
@@ -55,7 +58,10 @@ public class TransactionSyncService {
                 log.error("Null response from Plaid sync for item {}", item.getItemId());
                 return;
             }
-            processTransactions(response.getTransactions(), item);
+
+            List<com.plaid.client.model.Transaction> plaidTransactions = response.getTransactions();
+            processTransactions(plaidTransactions, item);
+
             item.setLastSync(LocalDateTime.now());
             plaidItemRepository.save(item);
 
@@ -65,19 +71,20 @@ public class TransactionSyncService {
         }
     }
 
-
-    private void processTransactions(List<TransactionBase> plaidTransactions, PlaidItem item) {
-        for (TransactionBase plaidTx : plaidTransactions) {
+    private void processTransactions(List<com.plaid.client.model.Transaction> plaidTransactions, PlaidItem item) {
+        for (com.plaid.client.model.Transaction plaidTx : plaidTransactions) {
             try {
                 Transaction existingTx = transactionRepository
                         .findByPlaidTransactionId(plaidTx.getTransactionId())
                         .orElse(null);
 
                 if (existingTx != null) {
-                    updateTransaction(existingTx, plaidTx);
+                    updateTransactionFromPlaid(existingTx, plaidTx);
                 } else {
-                    Transaction newTx = createTransaction(plaidTx, item);
-                    transactionRepository.save(newTx);
+                    Transaction newTx = createTransactionFromPlaid(plaidTx, item);
+                    if (newTx != null) {
+                        transactionRepository.save(newTx);
+                    }
                 }
             } catch (Exception e) {
                 log.error("Error processing transaction {}: {}", plaidTx.getTransactionId(), e.getMessage());
@@ -85,7 +92,7 @@ public class TransactionSyncService {
         }
     }
 
-    private Transaction createTransaction(TransactionBase plaidTx, PlaidItem item) {
+    private Transaction createTransactionFromPlaid(com.plaid.client.model.Transaction plaidTx, PlaidItem item) {
         Transaction transaction = new Transaction();
 
         // Find the associated account
@@ -93,26 +100,33 @@ public class TransactionSyncService {
                 .orElseThrow(() -> new RuntimeException("Account not found for plaid account ID: " + plaidTx.getAccountId()));
 
         transaction.setAccount(account);
-        updateTransactionFields(transaction, plaidTx);
+        updateTransactionFieldsFromPlaid(transaction, plaidTx);
 
         // Set default transaction type based on amount
-        double amount = plaidTx.getAmount().doubleValue();
+        double amount = plaidTx.getAmount();
         transaction.setType(amount > 0 ? TransactionType.INCOME : TransactionType.EXPENSE);
 
         return transaction;
     }
 
-    private void updateTransactionFields(Transaction transaction, TransactionBase plaidTx) {
+    private void updateTransactionFromPlaid(Transaction transaction, com.plaid.client.model.Transaction plaidTx) {
+        updateTransactionFieldsFromPlaid(transaction, plaidTx);
+        transactionRepository.save(transaction);
+    }
+
+    private void updateTransactionFieldsFromPlaid(Transaction transaction, com.plaid.client.model.Transaction plaidTx) {
         transaction.setPlaidTransactionId(plaidTx.getTransactionId());
         transaction.setAmount(BigDecimal.valueOf(plaidTx.getAmount()));
         transaction.setDescription(plaidTx.getName());
         transaction.setMerchant(plaidTx.getMerchantName());
 
-        // Handle date
-        LocalDate date = plaidTx.getAuthorizedDate() != null ?
-                LocalDate.parse(plaidTx.getAuthorizedDate()) :
-                LocalDate.parse(plaidTx.getDate());
-        transaction.setTransactionDate(date.atStartOfDay());
+        // Convert date string to LocalDateTime
+        LocalDate date  = plaidTx.getDate();
+        if (date != null) {
+            transaction.setTransactionDate(date.atStartOfDay());
+        } else {
+            transaction.setTransactionDate(LocalDateTime.now());
+        }
 
         transaction.setPending(plaidTx.getPending());
     }

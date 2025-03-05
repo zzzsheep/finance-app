@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import project.model.Account;
 import project.service.PlaidService;
 import project.model.PlaidItem;
 import java.util.List;
@@ -37,12 +38,15 @@ public class PlaidController {
             @RequestBody TokenExchangeRequest request) {
         try {
             String userEmail = authentication.getName();
-            String accessToken = plaidService.exchangePublicToken(
+            PlaidItem item = plaidService.exchangeAndSavePublicToken(
                     request.getPublicToken(),
                     userEmail,
                     request.getInstitutionId(),
                     request.getInstitutionName()
             );
+
+            // Now sync accounts for this item
+            List<Account> accounts = plaidAccountService.syncAccountsForItem(item);
             return ResponseEntity.ok()
                     .body(new SuccessResponse("Bank account successfully linked"));
         } catch (Exception e) {

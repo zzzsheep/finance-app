@@ -24,3 +24,4 @@ application:
     secret-key: YOUR_JWT_KEY
     expiration: 86400000  # a day in milliseconds
     token-prefix: "Bearer "
+    webhook_url : YOUR_WEBHOOK_URL
